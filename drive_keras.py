@@ -126,11 +126,6 @@ if __name__ == '__main__':
         type=int,
         help='Perform normalization on the input images, 0-No, 1=Yes',
         default=0)
-    parser.add_argument(
-        '--weights',
-        type=str,
-        help="Location of the weights for the keras model.",
-        default='models/keras/model.h5')
     args = parser.parse_args()
 
     hist = args.hist

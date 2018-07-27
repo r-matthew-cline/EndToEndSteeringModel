@@ -175,17 +175,15 @@ if action == 'test':
         generator=data_loader(testImages, testAngles, batch_size=user_batch, test=True, hist=True, norm=True, pred=True),
         steps=len(testImages)/user_batch,
         verbose=1).flatten()
-    print(pred)
-    print(testAngles)
     pred[pred > 1.0] = 1.0
     pred[pred < -1.0] = -1.0
     err = pred - testAngles
     mse = np.mean(err**2)
     rmse = np.sqrt(mse)
-    print("MSE: %f, RMSE: %f" % (mse, rmse))
-    print("Creating error histogram...\n\n")
+    print("MSE: %f, RMSE: %f\n\n" % (mse, rmse))
+    print("Preparing the error distribution histogram...\n\n")
     plt.figure()
-    plt.hist(np.array(err))
+    plt.hist(np.array(err), bins=100)
     plt.show()
     indx = np.arange(len(testImages))
     print("Plotting predictions vs ground truth...\n\n")
