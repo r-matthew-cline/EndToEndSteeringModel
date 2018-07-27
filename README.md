@@ -11,11 +11,13 @@ Description: used to manage the network, the command line options give control
 
 --model - the directory where the model checkpoints are stored  
 --action - train, continue, test, info, saliency  
-...train - start the training of the model from scratch  
-...continue - continue the training of the model from the initial epoch specified  
-...test - evaluate the performance of the modelm on the test set  
-...info - display the structure of the model  
-...saliency - examine an example saliency image to see where activations are happening  
+
+   train - start the training of the model from scratch  
+   continue - continue the training of the model from the initial epoch specified  
+   test - evaluate the performance of the modelm on the test set  
+   info - display the structure of the model  
+   saliency - examine an example saliency image to see where activations are happening  
+
 --init_epoch - the epoch to load  
 --batch - batch size to use  
 --iters - the number of epochs to train to  
