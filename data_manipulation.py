@@ -7,8 +7,8 @@
 ##
 ## Description: Preperation of the training and test data for the end to 
 ## end steering model. The images for training of the model are center
-## cropped jpg images. The actual images used for evaluation are stored
-## as ROS bag files. TO BE CONTINUED...
+## cropped jpg images. The two training sets are combined and shuffled. The 
+## test set is kept sparate for evaluation purposes.
 ##
 ##############################################################################
 
@@ -16,6 +16,7 @@ import pandas as pd
 import numpy as np
 import pickle
 import os
+import sys
 
 np.set_printoptions(suppress=True)
 
@@ -28,79 +29,70 @@ def shuffleData(data):
     data = data.reset_index(drop=True)
     return data
 
-print("Reading in the training data...\n\n")
-labelsFn1 = os.path.normpath('Data/Ch2_001/final_example.csv')
-labelsFn2 = os.path.normpath('Data/Ch2_002/output/steering.csv')
-cameraMapFn = os.path.normpath('Data/Ch2_002/output/camera.csv')
-
-### Clean data from part one of the contest ###
-data1 = pd.read_csv(labelsFn1, dtype={'frame_id': object}) 
-
-### Steering angle data from part 2 of the contest. The timestamps do not match the images. ###
-data2 = pd.read_csv(labelsFn2, usecols=['timestamp', 'angle'], index_col = False, dtype={'timestamp': object}) 
-
-### The image timestamps from part 2 of the contest. Do not match the steering angle timestamps. ###
-cameraMap = pd.read_csv(cameraMapFn, dtype={'timestamp': object})
-
-### Grab the timestamps for only the center camera images ###
-centerImgs = cameraMap.loc[cameraMap['frame_id'] == 'center_camera']
-
-### Split the image timestamps into an iterable list ###
-includedTimestamps = centerImgs.loc[:,'timestamp'].tolist()
-
-### Iterate through the image timestamps to correlate with the steering angel timestamps. ###
-### All of the steering angles collected between the previous image capture and the next  ###
-### image capture are extracted into a temporary data frame. The mode of the steering     ###
-### angles is used to avoid having extreme changes in steering angle between frames       ###
-### having large impacts on the average.                                                  ###
-print("Beginning correlation detection between image timestamps and steering angle timestamps...\n\n")
-for i in range(len(includedTimestamps)):
-
-    if i == 0:
-        angle = data2.loc[(data2['timestamp'] > includedTimestamps[i]) & (data2['timestamp'] < includedTimestamps[i+1])].mode().loc[0,'angle']
-    elif i == len(includedTimestamps) - 1:
-        angle = data2.loc[(data2['timestamp'] > includedTimestamps[i-1]) & (data2['timestamp'] < includedTimestamps[i])].mode().loc[0,'angle']
+### Get the names of all the label files ###
+i = 0
+for file in os.listdir(os.path.normpath('Data/Train/Labels')):
+    if i < 1:
+        df = pd.read_csv(os.path.join('Data/Train/Labels', file), usecols=['timestamp', 'frame_id', 'angle'], index_col=False, dtype={'timestamp': object})
+        i+=1
     else:
-        angle = data2.loc[(data2['timestamp'] > includedTimestamps[i-1]) & (data2['timestamp'] < includedTimestamps[i+1])].mode().loc[0,'angle']
+        df = pd.concat([df, pd.read_csv(os.path.join('Data/Train/Labels',file), usecols=['timestamp', 'frame_id', 'angle'], index_col=False, dtype={'timestamp': object})])
 
-    data1.loc[len(data1)] = [includedTimestamps[i], angle]
-
-    if (i+1) % 1000 == 0:
-        print("Completed %d out of %d iterations..." % (i+1, len(includedTimestamps)))   
-
-print(data1)
+df = df.loc[df['frame_id'] == 'center_camera']
+otherDf = pd.read_csv(os.path.normpath("Data/Train/interpolated.csv"), usecols=['timestamp', 'frame_id', 'angle'], index_col=False, dtype={'timestamp': object})
+otherDf = otherDf.loc[otherDf['frame_id'] == 'center_camera']
+df = pd.concat([df, otherDf], axis=0)
+testDF = pd.read_csv(os.path.normpath("Data/Test/testLabels.csv"), usecols=['frame_id', 'steering_angle'], index_col=False, dtype={'frame_id': object})
+curvesDf = df.copy()
+curvesDf = curvesDf[abs(curvesDf['angle']) > 0.1]
+print("Curves Samples = ", curvesDf.shape[0])
 
 ### SHUFFLE THE DATA ###
-# print("Shuffling the data...\n\n")
-# shuffledData = shuffleData(np.array(data, copy=True))
+print("Shuffling the data...\n\n")
+shuffledData = df.copy()
+shuffledData = shuffledData.sample(frac=1).reset_index(drop=True)
+shuffledCurves = curvesDf.sample(frac=1).reset_index(drop=True)
+
 
 ### SPLIT THE DATA ###
 print("Splitting the data into train and test...\n\n")
-# trainShuffled, testShuffled = splitData(shuffledData)
-train, test = splitData(data1)
+train, test = splitData(df)
+trainShuffled, testShuffled = splitData(shuffledData)
+trainCurves, testCurves = splitData(shuffledCurves)
 
-print(train)
 
 ### SPLIT THE IMAGE ID FROM THE STEERING ANGLE ###
 print("Splitting the image id and angle...\n\n")
-# trainImagesShuffled = trainShuffled[:,0]
-# trainAnglesShuffled = trainShuffled[:,1]
-# testImagesShuffled = testShuffled[:,0]
-# testAnglesShuffled = testShuffled[:,1]
+trainCurvesImages = np.array(trainCurves.iloc[:,0])
+trainCurvesAngles = np.array(trainCurves.iloc[:,2])
+valCurvesImages = np.array(testCurves.iloc[:,0])
+valCurvesAngles = np.array(testCurves.iloc[:,2])
+trainImagesShuffled = np.array(trainShuffled.iloc[:,0])
+trainAnglesShuffled = np.array(trainShuffled.iloc[:,2])
+valImagesShuffled = np.array(testShuffled.iloc[:,0])
+valAnglesShuffled = np.array(testShuffled.iloc[:,2])
 trainImages = np.array(train.iloc[:,0])
-trainAngles = np.array(train.iloc[:,1])
-testImages = np.array(test.iloc[:,0])
-testAngles = np.array(test.iloc[:,1])
+trainAngles = np.array(train.iloc[:,2])
+valImages = np.array(test.iloc[:,0])
+valAngles = np.array(test.iloc[:,2])
+testImages = np.array(testDF.iloc[:,0])
+testAngles = np.array(testDF.iloc[:,1])
 
 ### DUMP THE DATA TO PICKLE FILES FOR QUICK ACCESS ###
 print("Dumping to the pickle files...\n\n")
-# pickle.dump(trainImagesShuffled, open("trainImagesShuffled.p", "wb"))
-# pickle.dump(trainAnglesShuffled, open("trainAnglesShuffled.p", "wb"))
-# pickle.dump(testImagesShuffled, open("testImagesShuffled.p", "wb"))
-# pickle.dump(testAnglesShuffled, open("testAnglesShuffled.p", "wb"))
+pickle.dump(trainImagesShuffled, open("trainImagesShuffled.p", "wb"))
+pickle.dump(trainAnglesShuffled, open("trainAnglesShuffled.p", "wb"))
+pickle.dump(valImagesShuffled, open("valImagesShuffled.p", "wb"))
+pickle.dump(valAnglesShuffled, open("valAnglesShuffled.p", "wb"))
 pickle.dump(trainImages, open("trainImages.p", "wb"))
 pickle.dump(trainAngles, open("trainAngles.p", "wb"))
+pickle.dump(valImages, open("valImages.p", "wb"))
+pickle.dump(valAngles, open("valAngles.p", "wb"))
 pickle.dump(testImages, open("testImages.p", "wb"))
 pickle.dump(testAngles, open("testAngles.p", "wb"))
+pickle.dump(trainCurvesImages, open("trainCurvesImages.p", "wb"))
+pickle.dump(trainCurvesAngles, open("trainCurvesAngles.p", "wb"))
+pickle.dump(valCurvesImages, open("valCurvesImages.p", "wb"))
+pickle.dump(valCurvesAngles, open("valCurvesAngles.p", "wb"))
 
 
