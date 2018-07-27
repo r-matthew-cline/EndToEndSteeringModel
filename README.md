@@ -7,33 +7,35 @@ drive_keras.py - web app to interact with the udacity self-driving-car simulator
 data_manipulation.py - handles creating all of the pickle objects that store the image and label information  
 
 ### steering_model_keras.py
-Description: used to manage the network, the command line options give control  
+__Description:__ used to manage the network, the command line options give control  
 
---model - the directory where the model checkpoints are stored  
---action - train, continue, test, info, saliency  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;train - start the training of the model from scratch  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;continue - continue the training of the model from the initial epoch specified  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;test - evaluate the performance of the modelm on the test set  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;info - display the structure of the model  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;saliency - examine an example saliency image to see where activations are happening  
---init_epoch - the epoch to load  
---batch - batch size to use  
---iters - the number of epochs to train to  
+__--model__ - the directory where the model checkpoints are stored  
+__--action__ - train, continue, test, info, saliency  
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;_train_ - start the training of the model from scratch  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;_continue_ - continue the training of the model from the initial epoch specified  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;_test_ - evaluate the performance of the modelm on the test set  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;_info_ - display the structure of the model  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;_saliency_ - examine an example saliency image to see where activations are happening  
+
+__--init_epoch__ - the epoch to load  
+__--batch__ - batch size to use  
+__--iters__ - the number of epochs to train to  
 
 ### drive_keras.py
-Description: used to control the vehicle in the Udacity self-driving-car simulator  
+__Description:__ used to control the vehicle in the Udacity self-driving-car simulator  
 
---model - the directory where the model checkpoints are stored  
---epoch - the version of the model to load based on epoch  
---hist - 1 to perform histogram equalization on the images, 0 for no equalization  
---norm - 1 to perform normalization on the images, 0 for no normalization  
+__--model__ - the directory where the model checkpoints are stored  
+__--epoch__ - the version of the model to load based on epoch  
+__--hist__ - 1 to perform histogram equalization on the images, 0 for no equalization  
+__--norm__ - 1 to perform normalization on the images, 0 for no normalization  
 
 ### data_manipulation.py
-Description: creates pickle objects to store a list of the image names in the training, validation, and test sets as well as their labels for easy loading. File structure should conform as follows:  
+__Description:__ creates pickle objects to store a list of the image names in the training, validation, and test sets as well as their labels for easy loading. File structure should conform as follows:  
 
-./Data/Train/Images/ - All training and validation images  
-./Data/Train/Labels/ - Labels from the large training set  
-./Data/Train/interpolated.csv - labels from the smaller training set  
-./Data/Test/Images/ - All test images from Ch2_001  
-./Data/Test/testLabels.csv - All test labels  
+_./Data/Train/Images/_ - All training and validation images  
+_./Data/Train/Labels/_ - Labels from the large training set  
+_./Data/Train/interpolated.csv_ - labels from the smaller training set  
+_./Data/Test/Images/_ - All test images from Ch2_001  
+_./Data/Test/testLabels.csv_ - All test labels  
 
